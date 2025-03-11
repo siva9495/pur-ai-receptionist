@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const ChatInterface = ({ sessionId}) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +17,6 @@ const ChatInterface = ({ sessionId}) => {
   const handleContainerClick = (e) => {
     e.stopPropagation();
   };
-  const navigate = useNavigate();
   const showLoadingDialog = () => setIsLoading(true);
   const hideLoadingDialog = () => setIsLoading(false);
 
@@ -45,12 +43,7 @@ const ChatInterface = ({ sessionId}) => {
       const answer = data.answer;
 
       if (numberRegex.test(answer)) {
-        console.log('8-digit number detected, skipping speech and navigating.');
-        showLoadingDialog();
-        setTimeout(() => {
-          hideLoadingDialog();
-          navigate('/video-calling');
-        }, 5000);
+        
 
         const cleanedAnswer = answer.replace(numberRegex, '').trim();
         setChatHistory((prev) => [...prev, { type: 'bot', content: cleanedAnswer }]);

@@ -27,7 +27,7 @@ const PointerAnimation = ({onClick}) => {
 
       {/* Text with pressing animation */}
       <span className="text-white text-base font-medium tracking-wide whitespace-nowrap mb-2">
-        CLICK HERE TO CONNECT THE CALL WITH THE RECEPTIONIST
+        CLICK ANYWHERE TO TALK WITH ME
       </span>
 
       <style jsx>{`

@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SphereAnimation from '../animations/SphereAnimation';
-import axios from 'axios';
 import AnalyzingAnimation from '../animations/AnalyzingAnimation';
-import './InteractionActivity.css';
+import PointerAnimation from '../animations/PointerAnimation';
+import ChatInterface from '../ChatbotComponent/ChatInterface';
+import TranscriptDisplay from '../AnimatedTranscriptDisplay/TranscriptDisplay';
 import img from '../Images/purviewlogo.png';
+import { Maximize2, Minimize2 } from 'lucide-react';
+import BASE_URL from '../config';
+import axiosInstance from '../Api/axiosInstance';
+import './InteractionActivity.css';
 
 const InteractionActivity = () => {
   const [state, setState] = useState({
@@ -12,13 +18,94 @@ const InteractionActivity = () => {
     transcript: '',
     response: '',
     isAnalyzing: false,
-    hasGreeted: false, // Add a flag to track if the greeting has been provided
-    sessionId: null, // Track session ID
-    clearTimer: null, // Timer for auto-clearing session
+    hasGreeted: false,
+    sessionId: null,
+    clearTimer: null,
+    isClearing: false,
+    isFullscreen: false,
   });
 
-  const recognitionRef = useRef(null);
+  const isSpeakingRef = useRef(state.isSpeaking); // Ref to track isSpeaking
   const containerRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err);
+    }
+  };
+
+  const saveChatToFirebase = async (sessionId, question, answer) => {
+    console.log(sessionId)
+    try {
+      if (!sessionId) {
+        console.error('Session ID is required to save chat data.');
+        return;
+      }
+  
+      const chatRef = ref(db, `chatHistory/${sessionId}`);
+  
+      // Fetch existing data (if any)
+      const snapshot = await get(chatRef);
+      let chatHistory = snapshot.exists() ? snapshot.val().history || [] : [];
+  
+      // Append the new question and answer to the history array
+      chatHistory.push({
+        question,
+        answer,
+        timestamp: Date.now(),
+      });
+  
+      // Update the Firebase document
+      await set(chatRef, {
+        sessionId, // Store sessionId for reference
+        history: chatHistory, // Store the updated history
+      });
+  
+      console.log('Chat saved to Firebase successfully');
+    } catch (error) {
+      console.error('Error saving chat to Firebase:', error);
+    }
+  };
+
+  // Detect fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setState((prevState) => ({
+        ...prevState,
+        isFullscreen: !!document.fullscreenElement,
+      }));
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const stopSpeaking = () => {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setState(prevState => ({ ...prevState, isSpeaking: false }));
+      isSpeakingRef.current = false;
+      console.log('Ongoing speech has been canceled.');
+    }
+  };  
+
+  const handleVideoCall = () => {
+    stopSpeaking();
+
+    showLoadingDialog();
+    setTimeout(() => {
+      hideLoadingDialog();
+      // navigate('/video-calling');
+      navigate('/video-calling', { state: { sessionId: state.sessionId } });
+    }, 5000);
+  };
 
   useEffect(() => {
     initializeSpeechRecognition();
@@ -29,20 +116,46 @@ const InteractionActivity = () => {
       setState((prevState) => ({ ...prevState, sessionId: generatedSessionId }));
     }
 
+    // Add an event listener for page refresh/unload
+    const handlePageUnload = () => {
+      if (state.sessionId) {
+        // const url = 'https://cricket-smooth-polliwog.ngrok-free.app/clear_chat_history';
+        const url = `${BASE_URL}/clear_chat_history`;
+        const params = new URLSearchParams();
+        params.append("user_id", state.sessionId);
+
+        fetch(url, {
+          method: 'DELETE',
+          body: params.toString(), // Sending as URL-encoded string
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          keepalive: true, // Allows the request to be sent during page unload
+        });
+      }
+    };
+    window.addEventListener('beforeunload', handlePageUnload);
+
     // Cleanup on component unmount
     return () => {
       if (state.clearTimer) {
         clearTimeout(state.clearTimer);
       }
+      window.removeEventListener('beforeunload', handlePageUnload);
+      // Optionally clear the session when component unmounts
+      if (state.sessionId) {
+        // clearSession(state.sessionId);
+      }
+      stopSpeaking();
     };
-  }, []);
+  }, [state.sessionId]); // Added state.sessionId as dependency
 
   const initializeSpeechRecognition = () => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
 
-      recognition.lang = 'en-US';
+      recognition.lang = 'en-IN';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
       recognitionRef.current = recognition;
@@ -76,23 +189,50 @@ const InteractionActivity = () => {
 
   const handleSpeechError = (event) => {
     alert('Error with speech recognition: ' + event.error);
+    setState((prevState) => ({ ...prevState, isListening: false, isSpeaking: false }));
+    isSpeakingRef.current = false;
   };
 
   const handleSpeechEnd = () => {
-    setState((prevState) => ({ ...prevState, isListening: false }));
+    setState((prevState) => ({ ...prevState, isListening: false, isSpeaking: false }));
+    isSpeakingRef.current = false;
   };
 
   const startListening = () => {
-    if (!state.isListening && !state.isSpeaking && recognitionRef.current) {
-      if (!state.hasGreeted) {
-        // Speak greeting and start listening
-        speakOut('Hello, This is Maya. How may I help you?', () => {
-          setState((prevState) => ({ ...prevState, hasGreeted: true }));
+    if (isSpeakingRef.current) {
+      // Cancel ongoing speech
+      window.speechSynthesis.cancel();
+      // Update the state and ref to reflect that speaking has stopped
+      setState(prevState => ({ ...prevState, isSpeaking: false }));
+      isSpeakingRef.current = false;
+
+      // Start listening after a short delay to ensure speech is canceled
+      setTimeout(() => {
+        if (!state.isListening && recognitionRef.current) {
+          if (!state.hasGreeted) {
+            // Speak greeting and start listening
+            speakOut('Hello, This is Maya. How may I help you?', () => {
+              setState(prevState => ({ ...prevState, hasGreeted: true }));
+              startRecognition();
+            });
+          } else {
+            // Directly start listening
+            startRecognition();
+          }
+        }
+      }, 100); // 100ms delay
+    } else {
+      if (!state.isListening && !state.isSpeaking && recognitionRef.current) {
+        if (!state.hasGreeted) {
+          // Speak greeting and start listening
+          speakOut('Hello, This is Maya. How may I help you?', () => {
+            setState(prevState => ({ ...prevState, hasGreeted: true }));
+            startRecognition();
+          });
+        } else {
+          // Directly start listening
           startRecognition();
-        });
-      } else {
-        // Directly start listening
-        startRecognition();
+        }
       }
     }
   };
@@ -113,17 +253,24 @@ const InteractionActivity = () => {
   };
 
   const fetchResponse = async (userInput) => {
-    if (state.isSpeaking) return;
+    if (isSpeakingRef.current) return;
 
     setState((prevState) => ({ ...prevState, isAnalyzing: true }));
     try {
       const formData = new FormData();
       formData.append('question', userInput);
-      formData.append('user_id', state.sessionId); // Add session ID as user_id
+      formData.append('user_id', state.sessionId); // Ensure this matches backend expectations
 
-      // Fetch response from server
-      const response = await axios.post('https://cricket-smooth-polliwog.ngrok-free.app/ask_jpmc', formData);
+      // Fetch response from server using Axios instance
+      const response = await axiosInstance.post(
+        '/ask_jpmc',
+        formData
+      );
+
       const { answer } = response.data;
+
+      // Save the question and answer to Firebase
+      await saveChatToFirebase(state.sessionId, userInput, answer);
 
       setState((prevState) => ({
         ...prevState,
@@ -134,50 +281,91 @@ const InteractionActivity = () => {
       // Speak out the answer
       await speakOut(answer);
 
-      // Set a timer to clear session if listening doesn't start in 5 seconds
+      // Set a timer to clear session if listening doesn't start in 20 seconds
       const timer = setTimeout(() => {
         if (!state.isListening) {
           console.log('No listening started. Clearing session and chat history.');
           clearSession(state.sessionId);
         }
-      }, 5000);
+      }, 20000);
 
       setState((prevState) => ({ ...prevState, clearTimer: timer }));
     } catch (error) {
-      alert('Failed to fetch response from the server.');
-    } finally {
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        console.error('Error Response:', error.response.data);
+        alert(`Failed to fetch response: ${error.response.data.message || error.response.statusText}`);
+      } else if (error.request) {
+        // Request was made but no response received
+        console.error('Error Request:', error.request);
+        alert('No response from the server. Please try again later.');
+      } else {
+        // Something happened in setting up the request
+        console.error('Error Message:', error.message);
+        alert('An error occurred while setting up the request.');
+      }
       setState((prevState) => ({ ...prevState, isAnalyzing: false }));
     }
   };
 
   const clearSession = async (sessionId) => {
-    try {
-      const formData = new FormData();
-      formData.append('user_id', sessionId);
+    if (!sessionId || state.isClearing) return; // Prevent multiple calls if already clearing
 
-      await axios.delete('https://cricket-smooth-polliwog.ngrok-free.app/clear_chat_history', {
-        data: formData, // Send form data with session_id
-      });
-      console.log('Session and chat history cleared.');
+    try {
+      setState((prevState) => ({ ...prevState, isClearing: true }));
+
+      const formData = new FormData();
+      formData.append("user_id", sessionId);
+
+      // Make DELETE request using Axios instance
+      await axiosInstance.delete(
+        '/clear_chat_history',
+        { data: formData }
+      );
+
+      console.log("Session and chat history cleared.");
       setState((prevState) => ({
         ...prevState,
         sessionId: null,
         clearTimer: null,
+        isClearing: false, // Reset clearing status
+        transcript: "",
+        response: "",
+        hasGreeted: false,
       }));
     } catch (error) {
-      console.error('Failed to clear session:', error);
+      // Error handling
+      if (error.response) {
+        console.error("Error Response:", error.response.data);
+        alert(
+          `Failed to clear session: ${
+            error.response.data.message || error.response.statusText
+          }`
+        );
+      } else if (error.request) {
+        console.error("Error Request:", error.request);
+        alert("No response from the server. Please try again later.");
+      } else {
+        console.error("Error Message:", error.message);
+        alert("An error occurred while setting up the request.");
+      }
+      setState((prevState) => ({ ...prevState, isClearing: false })); // Reset clearing status even on error
     }
   };
 
   const speakOut = async (text, callback) => {
+    // Set isSpeaking to true when speech starts
+    setState(prevState => ({ ...prevState, isSpeaking: true }));
+    isSpeakingRef.current = true;
+
     const synth = window.speechSynthesis;
-  
+
     // Split long text into manageable chunks
     const splitText = (text, maxLength = 100) => {
       const words = text.split(' ');
       const chunks = [];
       let chunk = '';
-  
+
       words.forEach((word) => {
         if ((chunk + word).length <= maxLength) {
           chunk += `${word} `;
@@ -186,19 +374,19 @@ const InteractionActivity = () => {
           chunk = `${word} `;
         }
       });
-  
+
       if (chunk.trim()) {
         chunks.push(chunk.trim());
       }
-  
+
       return chunks;
     };
-  
+
     // Function to handle speech synthesis for each chunk
     const speakChunk = (chunk, language, country, preferredNames) => {
       return new Promise((resolve) => {
         const msg = new SpeechSynthesisUtterance(chunk);
-  
+
         const selectVoice = () => {
           const voices = synth.getVoices();
           voices.sort((a, b) => {
@@ -223,22 +411,23 @@ const InteractionActivity = () => {
           });
           return voices[0] || null;
         };
-  
+
         const voice = selectVoice();
         msg.voice = voice || null;
         msg.lang = language + (country ? `-${country}` : '');
         msg.onend = resolve;
         msg.onerror = resolve;
-  
+
         synth.speak(msg);
       });
     };
-  
+
     // Cancel any ongoing or pending speech
-    if (synth.speaking || synth.pending) {
+    if (synth.speaking) {
       synth.cancel();
+      // The 'onend' event will be triggered, so no need to set isSpeaking to false here
     }
-  
+
     // Check for special triggers (e.g., 8-digit numbers)
     const numberRegex = /\b\d{8}\b/;
     if (numberRegex.test(text)) {
@@ -248,26 +437,33 @@ const InteractionActivity = () => {
         hideLoadingDialog();
         navigate('/video-calling');
       }, 5000);
+      // Set isSpeaking to false since we're navigating away
+      setState(prevState => ({ ...prevState, isSpeaking: false }));
+      isSpeakingRef.current = false;
       return;
     }
-  
+
     // Wait for voices to load if not yet initialized
     if (synth.getVoices().length === 0) {
       await new Promise((resolve) => {
         synth.onvoiceschanged = resolve;
       });
     }
-  
+
     // Process and speak each text chunk
     const chunks = splitText(text);
     for (const chunk of chunks) {
       await speakChunk(chunk, 'en', null, [/Google US English/, /Samantha/, /Fiona/, /Victoria/, /Zira/, /female/i]);
     }
-  
+
+    // Set isSpeaking to false when speech ends
+    setState(prevState => ({ ...prevState, isSpeaking: false }));
+    isSpeakingRef.current = false;
+
     if (callback) {
       callback();
     }
-  };  
+  };
 
   const showLoadingDialog = () => {
     const loadingDialog = document.createElement('div');
@@ -291,7 +487,7 @@ const InteractionActivity = () => {
     <div
       onClick={startListening}
       ref={containerRef}
-      className="relative h-screen w-full bg-[#964b00] overflow-hidden"
+      className="relative h-screen w-full overflow-hidden bg-black"
     >
       {/* Fullscreen Button */}
       {!state.isFullscreen && (

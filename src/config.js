@@ -1,3 +1,3 @@
-const BASE_URL = "https://ruling-goldfish-inherently.ngrok-free.app";
+const BASE_URL = "https://louse-credible-remotely.ngrok-free.app";
 
 export default BASE_URL;

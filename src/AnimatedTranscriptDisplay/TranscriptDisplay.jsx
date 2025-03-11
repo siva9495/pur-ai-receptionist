@@ -19,8 +19,8 @@ const TranscriptDisplay = ({ transcript, response }) => {
           {transcript && (
             <div className="animate-[slideIn_0.5s_ease-out]">
               <div
-                className="max-w-[90%] bg-[#964b00] text-white p-4 rounded-2xl rounded-bl-none 
-                shadow-[0_0_15px_#964b00] backdrop-blur-sm"
+                className="max-w-[90%] bg-gradient-radial from-[rgb(12,25,97)] to-black text-white p-4 rounded-2xl rounded-bl-none 
+                shadow-[0_0_15px_rgb(12,25,97)] backdrop-blur-sm"
               >
                 <div className="text-sm text-blue-200 mb-1">You</div>
                 <div className="text-lg">{transcript}</div>
@@ -32,8 +32,8 @@ const TranscriptDisplay = ({ transcript, response }) => {
           {response && (
             <div className="animate-[slideIn_0.5s_ease-out]">
               <div
-                className="max-w-[90%] bg-[#964b00] text-white p-4 rounded-2xl rounded-br-none 
-                shadow-[0_0_15px_#964b00] backdrop-blur-sm ml-auto"
+                className="max-w-[90%] bg-gradient-radial from-[rgb(12,25,97)] to-black text-white p-4 rounded-2xl rounded-br-none 
+                shadow-[0_0_15px_rgb(12,25,97)] backdrop-blur-sm ml-auto"
               >
                 <div className="text-sm text-blue-200 mb-1">Maya</div>
                 <div className="text-lg">{response}</div>

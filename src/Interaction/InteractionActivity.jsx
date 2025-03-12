@@ -27,7 +27,9 @@ const InteractionActivity = () => {
 
   const isSpeakingRef = useRef(state.isSpeaking); // Ref to track isSpeaking
   const containerRef = useRef(null);
+  const navigate = useNavigate();
   const recognitionRef = useRef(null);
+
 
   const toggleFullscreen = async () => {
     try {

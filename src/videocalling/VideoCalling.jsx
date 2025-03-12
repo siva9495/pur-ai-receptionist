@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Peer from 'peerjs';
-import { db } from '../Firebase';
+import { db } from '../Firebase/Firebase';
 import { ref, set, remove, onValue, get, update } from 'firebase/database';
 import './VideoCalling.css';
 import { MdCallEnd, MdMic, MdMicOff, MdVideocam, MdVideocamOff } from 'react-icons/md';
-import img from '../Images/jpmc.png';
+import img from '../Images/purviewlogo.png';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const VideoCalling = () => {
@@ -444,108 +444,108 @@ useEffect(() => {
 
   return (
     <div className="bg-black min-h-screen flex flex-col">
-      {/* Navbar */}
-      <nav className="bg-gradient-to-t from-[#964b00] to-[#964b00]/5 backdrop-blur-md border border-white/20 shadow-lg">
+    {/* Navbar */}
+    <nav className="bg-gradient-to-t from-[rgb(12,25,97)] to-[rgb(12,25,97)]/5 backdrop-blur-md border border-white/20 shadow-lg">
         <div className="container flex items-center justify-between px-6 py-3 mx-auto">
-          <div className="h-12 flex items-center">
+        <div className="h-12 flex items-center">
             <img
-              className="h-6 top-2 filter invert brightness-0"
-              src={jpmcLogo}
-              alt="JPMC Logo"
+            className="h-6 top-2 filter invert brightness-0"
+            src={img}
+            alt="Purview Logo"
             />
-          </div>
-          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-white">
+        </div>
+        <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-white">
             Video Calling Assistant
-          </h1>
+        </h1>
         </div>
-      </nav>
+    </nav>
 
-      {/* Main Content with Loading Overlay */}
-      <div className="flex-1 relative">
-      {isLoading && (
+    {/* Main Content with Loading Overlay */}
+    <div className="flex-1 relative">
+        {isLoading && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 border-4 border-t-[#964b00] border-r-[#964b00] border-b-[#964b00]/30 border-l-[#964b00]/30 rounded-full animate-spin mx-auto"></div>
+            <div className="text-center space-y-4">
+            <div className="w-16 h-16 border-4 border-t-[rgb(12,25,97)] border-r-[rgb(12,25,97)] border-b-[rgb(12,25,97)]/30 border-l-[rgb(12,25,97)]/30 rounded-full animate-spin mx-auto"></div>
             <p className="text-white text-xl font-medium">
-              {isForwarding ? 'Transferring your call to another assistant...' : loadingMessage}
+                {isForwarding ? 'Transferring your call to another assistant...' : loadingMessage}
             </p>
-          </div>
+            </div>
         </div>
-      )}
+        )}
 
         <div className="flex flex-row items-start justify-center px-8 py-6 space-x-8">
-          <div className="w-3/4 bg-black shadow-lg relative rounded-lg overflow-hidden border border-[#964b00]">
-            <h3 className="text-white text-center font-bold py-2 bg-gradient-to-r from-[#964b00] to-[#db6e00]">
-              Live Assistant Feed
+        <div className="w-3/4 bg-black shadow-lg relative rounded-lg overflow-hidden border border-[rgb(12,25,97)]">
+            <h3 className="text-white text-center font-bold py-2 bg-gradient-to-r from-[rgb(12,25,97)] to-[rgb(30,60,180)]">
+            Live Assistant Feed
             </h3>
             <div className="relative">
-              <video
+            <video
                 ref={remoteVideoRef}
                 autoPlay
                 playsInline
                 className="w-full h-[550px] object-cover"
-              ></video>
-              {(!remoteStream || !isRemoteCameraOn) && !isLoading && (
+            ></video>
+            {(!remoteStream || !isRemoteCameraOn) && !isLoading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black">
-                  <MdVideocamOff size={48} className="text-white/60 mb-3" />
-                  <p className="text-white/80 text-lg">
+                <MdVideocamOff size={48} className="text-white/60 mb-3" />
+                <p className="text-white/80 text-lg">
                     {!remoteStream ? "Please wait, while the human assistant accepts your call..." : "Assistant's camera is turned off"}
-                  </p>
+                </p>
                 </div>
-              )}
+            )}
             </div>
-          </div>
-  
-          <div className="w-60 flex flex-col items-center bg-black rounded-lg overflow-hidden">
-            <h3 className="text-white text-center rounded-t-lg text-lg font-bold py-1 w-full bg-gradient-to-r from-[#964b00] to-[#db6e00]">
-              Your Feed
+        </div>
+
+        <div className="w-60 flex flex-col items-center bg-black rounded-lg overflow-hidden">
+            <h3 className="text-white text-center rounded-t-lg text-lg font-bold py-1 w-full bg-gradient-to-r from-[rgb(12,25,97)] to-[rgb(30,60,180)]">
+            Your Feed
             </h3>
             <div className="w-full h-40 overflow-hidden shadow-md relative">
-              <video
+            <video
                 ref={localVideoRef}
                 autoPlay
                 muted
                 playsInline
                 className="w-full h-full object-cover rounded-b-lg"
-              ></video>
-              {!isCameraOn && (
-                <div className="absolute inset-0 bg-black flex items-center justify-center border border-[#964b00] rounded-b-lg">
-                  <MdVideocamOff size={34} className="text-white" />
+            ></video>
+            {!isCameraOn && (
+                <div className="absolute inset-0 bg-black flex items-center justify-center border border-[rgb(12,25,97)] rounded-b-lg">
+                <MdVideocamOff size={34} className="text-white" />
                 </div>
-              )}
+            )}
             </div>
             <div className="mt-4 flex items-center gap-3">
-              <button
+            <button
                 onClick={toggleMicrophone}
                 className={`p-4 rounded-full text-white transition-colors duration-200 ${
-                  isMicOn ? 'bg-[#964b00] hover:bg-[#6b3500]' : 'bg-red-600 hover:bg-red-700'
+                isMicOn ? 'bg-[rgb(12,25,97)] hover:bg-[rgb(8,16,60)]' : 'bg-red-600 hover:bg-red-700'
                 }`}
                 title={isMicOn ? 'Turn off microphone' : 'Turn on microphone'}
-              >
+            >
                 {isMicOn ? <MdMic size={24} /> : <MdMicOff size={24} />}
-              </button>
-  
-              <button
+            </button>
+
+            <button
                 onClick={toggleCamera}
                 className={`p-4 rounded-full text-white transition-colors duration-200 ${
-                  isCameraOn ? 'bg-[#964b00] hover:bg-[#6b3500]' : 'bg-red-600 hover:bg-red-700'
+                isCameraOn ? 'bg-[rgb(12,25,97)] hover:bg-[rgb(8,16,60)]' : 'bg-red-600 hover:bg-red-700'
                 }`}
                 title={isCameraOn ? 'Turn off camera' : 'Turn on camera'}
-              >
+            >
                 {isCameraOn ? <MdVideocam size={24} /> : <MdVideocamOff size={24} />}
-              </button>
-  
-              <button
+            </button>
+
+            <button
                 className="bg-red-600 p-4 rounded-full text-white hover:bg-red-700 transition-colors duration-200"
                 onClick={endCall}
                 title="End call"
-              >
+            >
                 <MdCallEnd size={24} />
-              </button>
+            </button>
             </div>
-          </div>
         </div>
-      </div>
+        </div>
+    </div>
     </div>
   );
 };

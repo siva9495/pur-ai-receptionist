@@ -4,11 +4,12 @@ import { getAuth, signOut } from "firebase/auth";
 import { ref, get, onValue, remove } from "firebase/database";
 import { db } from "../Firebase/Firebase";
 import { Upload } from "lucide-react";
-import img from "../Images/jpmc.png";
+import img from "../Images/purviewlogo.png";
 
 const FileUpload = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -54,13 +55,11 @@ const FileUpload = () => {
     });
 
     try {
-      const response = await fetch(
-        "https://ruling-goldfish-inherently.ngrok-free.app/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(`${BASE_URL}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      
 
       if (response.ok) {
         alert("Files uploaded successfully!");
@@ -77,24 +76,25 @@ const FileUpload = () => {
   };
 
   const toggleProfileDialog = () => {
-    setIsProfileDialogOpen(!isProfileDialogOpen);
+    setIsDialogOpen(!isDialogOpen);
   };
 
   useEffect(() => {
     const fetchEmail = async () => {
-      const isLoggedIn = localStorage.get("isLoggedIn");
-      if (!isLoggedIn) {
-        navigate("/signin");
-        return;
-      }
-
-      const email = localStorage.get("userEmail");
-      if (email) {
-        setUserEmail(email);
-        const initials = email.slice(0, 2).toUpperCase();
-        setUserInitials(initials);
-      }
-    };
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (!isLoggedIn) {
+            navigate("/signin");
+            return;
+        }
+        
+        const email = localStorage.getItem("userEmail");
+        console.log("User Email" + email);
+        if (email) {
+            setUserEmail(email);
+            const initials = email.slice(0, 2).toUpperCase();
+            setUserInitials(initials);
+        }
+    };      
 
     fetchEmail();
   }, [navigate]);
@@ -118,12 +118,12 @@ const FileUpload = () => {
     <div className="min-h-screen bg-black flex flex-col bg-gradient-to-t from-gray-900 to-black"
          style={{
            background: `
-             radial-gradient(circle at bottom right, rgba(80, 54, 41, 1) 20%, rgba(0, 0, 0, 1) 70%),
+             radial-gradient(circle at bottom right, rgb(12,25,97) 20%, rgba(0, 0, 0, 1) 70%),
              radial-gradient(circle at top right, rgba(150, 75, 0, 1) 10%, rgba(0, 0, 0, 1) 80%)
            `
          }}>
       {/* Navbar */}
-      <nav className="bg-gradient-to-t from-[#503629] to-[#964b00]/5 backdrop-blur-md border-b border-white/20 shadow-lg">
+      <nav className="bg-gradient-to-t from-[rgb(12,25,97)] to-[rgb(12,25,97)]/5 backdrop-blur-md border-b border-white/20 shadow-lg">
         <div className="container flex items-center justify-between px-6 py-3 mx-auto">
           <div className="flex items-center">
             <img className="h-12 filter invert brightness-0" src={img} alt="JPMC Logo" />
@@ -134,10 +134,10 @@ const FileUpload = () => {
           </h1>
 
           <div className="flex items-center space-x-6">
-            <a href="/AdminDashboardPage" className="text-white hover:text-[#964b00] transition-colors">
+            <a href="/AdminDashboardPage" className="text-white hover:text-[rgb(12,25,97)] transition-colors">
               Home
             </a>
-            <a href="/FileUpload" className="text-white hover:text-[#964b00] transition-colors">
+            <a href="/FileUpload" className="text-white hover:text-[rgb(12,25,97)] transition-colors">
               Files
             </a>
             <div
@@ -151,36 +151,32 @@ const FileUpload = () => {
       </nav>
 
       {/* Profile Dialog */}
-      {isProfileDialogOpen && (
-        <div className="absolute top-16 right-6 bg-black/90 backdrop-blur-md rounded-lg shadow-lg p-4 w-80 z-50 border border-white/20 transform transition-all">
-          <p className="text-white font-medium mb-4 break-words">
-            Email: {userEmail}
-          </p>
+      {isDialogOpen && (
+        <div className="absolute top-16 right-6 bg-black rounded-lg shadow-lg p-4 w-80 z-50">
+          <p className="text-white font-medium mb-4 break-words">Email: {userEmail}</p>
           <button
-            className="w-full px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+            className="w-full px-4 py-2 text-white bg-[rgb(12,25,97)] rounded-lg hover:bg-[rgb(12,25,97)]"
             onClick={() => setIsSignOutDialogOpen(true)}
           >
             Sign Out
           </button>
         </div>
       )}
-
-      {/* Sign-Out Dialog */}
       {isSignOutDialogOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-          <div className="bg-[#503629] rounded-lg shadow-xl p-6 w-96 text-center border border-white/20">
-            <h2 className="text-xl font-bold text-white mb-4">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-96 text-center">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
               Are you sure you want to sign out?
             </h2>
-            <div className="flex justify-between space-x-4">
+            <div className="flex justify-between">
               <button
-                className="flex-1 px-6 py-2 text-white bg-[#964b00] rounded-lg hover:bg-[#964b00]/80 transition-colors"
+                className="px-6 py-2 text-white bg-[rgb(12,25,97)] rounded-lg hover:bg-[rgb(12,25,97)]"
                 onClick={() => setIsSignOutDialogOpen(false)}
               >
                 Cancel
               </button>
               <button
-                className="flex-1 px-6 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                className="px-6 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600"
                 onClick={handleSignOut}
               >
                 Sign Out
@@ -193,7 +189,7 @@ const FileUpload = () => {
       {/* File Upload Section */}
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <div
-          className={`w-full max-w-2xl bg-[rgb(150,105,82)]/90 backdrop-blur-md border-2 ${
+          className={`w-full max-w-2xl bg-[rgb(8,16,60)]/90 backdrop-blur-md border-2 ${
             dragActive ? 'border-white' : 'border-gray-700'
           } rounded-lg p-8 text-center transition-all transform ${
             dragActive ? 'scale-102 shadow-2xl' : ''
@@ -215,7 +211,7 @@ const FileUpload = () => {
           />
           <label
             htmlFor="file-input"
-            className="px-6 py-3 bg-[#964b00] text-white rounded-lg cursor-pointer hover:bg-[#503629] transition-colors inline-block"
+            className="px-6 py-3 bg-[rgb(12,25,97)] text-white rounded-lg cursor-pointer hover:bg-[rgb(8,16,60)] transition-colors inline-block"
           >
             Select Files
           </label>
@@ -227,7 +223,7 @@ const FileUpload = () => {
             <h3 className="text-white text-lg mb-4 font-semibold">Selected Files:</h3>
             <ul className="space-y-2">
               {selectedFiles.map((file, index) => (
-                <li key={index} className="flex items-center justify-between bg-[#503629]/50 p-3 rounded-lg">
+                <li key={index} className="flex items-center justify-between bg-[rgb(8,16,60)]/50 p-3 rounded-lg">
                   <span className="text-white truncate">{file.name}</span>
                   <button
                     onClick={() => removeFile(index)}
@@ -243,7 +239,7 @@ const FileUpload = () => {
 
         {/* Upload Button */}
         <button
-          className={`mt-6 px-8 py-3 bg-green-600 text-white rounded-lg transition-all transform hover:bg-green-700 disabled:opacity-50 ${
+          className={`mt-6 px-8 py-3 bg-[rgb(12,25,97)] text-white rounded-lg transition-all transform hover:bg-[rgb(8,16,60)] disabled:opacity-50 ${
             isUploading ? 'cursor-not-allowed' : 'hover:scale-105'
           }`}
           onClick={handleUpload}

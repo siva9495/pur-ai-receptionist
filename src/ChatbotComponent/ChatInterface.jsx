@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
+import BASE_URL from '../config';
 
 const ChatInterface = ({ sessionId }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,10 +34,10 @@ const ChatInterface = ({ sessionId }) => {
       formData.append('question', message);
       formData.append('user_id', sessionId);
 
-      const response = await fetch('https://sharing-partially-kangaroo.ngrok-free.app/ask_jpmc', {
+      const response = await fetch(`${BASE_URL}/ask_jpmc`, {
         method: 'POST',
         body: formData,
-      });
+      });      
 
       const data = await response.json();
       const numberRegex = /\b\d{8}\b/;

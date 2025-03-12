@@ -507,6 +507,8 @@ const AdminDashboardPage = () => {
             Assistant Dashboard
           </h1>
           <div className="flex items-center space-x-6">
+          <a href="/AdminDashboardPage" className="text-white hover:underline">Home</a>
+          <a href="/FileUpload" className="text-white hover:underline">Files</a>
             <div
               className="flex items-center justify-center w-10 h-10 bg-white rounded-full cursor-pointer"
               onClick={toggleProfileDialog}

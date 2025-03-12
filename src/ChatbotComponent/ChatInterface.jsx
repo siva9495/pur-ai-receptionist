@@ -33,7 +33,7 @@ const ChatInterface = ({ sessionId }) => {
       formData.append('question', message);
       formData.append('user_id', sessionId);
 
-      const response = await fetch('https://louse-credible-remotely.ngrok-free.app/ask_jpmc', {
+      const response = await fetch('https://sharing-partially-kangaroo.ngrok-free.app/ask_jpmc', {
         method: 'POST',
         body: formData,
       });

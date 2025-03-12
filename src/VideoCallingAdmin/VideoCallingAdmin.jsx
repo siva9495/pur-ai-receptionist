@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Peer from 'peerjs';
-import { db } from '../Firebase';
+import { db } from '../Firebase/Firebase';
 import { ref, get, onValue, remove, update } from 'firebase/database';
 import './VideoCallingAdmin.css';
 import { MdCallEnd, MdChat, MdClose, MdMic, MdMicOff, MdVideocam, MdVideocamOff } from "react-icons/md";
@@ -199,10 +199,10 @@ const VideoCallingAdmin = () => {
   return (
     <div className="bg-black h-screen flex flex-col">
       {/* Navbar */}
-      <nav className="bg-gradient-to-t from-[#964b00] to-[#964b00]/5 backdrop-blur-md border border-white/20 shadow-lg">
+      <nav className="bg-gradient-to-t from-[rgb(12,25,97)] to-[rgb(12,25,97)]/5 backdrop-blur-md border border-white/20 shadow-lg">
         <div className="container flex items-center justify-between px-6 py-3 mx-auto">
           <div className="h-12 flex items-center">
-            <img className="h-6 filter invert brightness-0" src={img} alt="Purview Logo" />
+            <img className="h-12 filter invert brightness-0" src={img} alt="Purview Logo" />
           </div>
           <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-white">
             Video Calling
@@ -212,8 +212,8 @@ const VideoCallingAdmin = () => {
 
       <div className="flex-1 flex flex-row items-start justify-center px-8 py-6 space-x-8 relative">
         {/* Main Live Video Feed */}
-        <div className="w-3/4 bg-black shadow-lg relative rounded-lg overflow-hidden border border-[#964b00]">
-          <h3 className="text-white text-center rounded-t-lg font-bold py-2 bg-gradient-to-r from-[#964b00] to-[#db6e00]">
+        <div className="w-3/4 bg-black shadow-lg relative rounded-lg overflow-hidden border border-[rgb(12,25,97)]">
+          <h3 className="text-white text-center rounded-t-lg font-bold py-2 bg-gradient-to-r from-[rgb(12,25,97)] to-[rgb(30,60,180)]">
             Live User Feed
           </h3>
           <video
@@ -231,7 +231,7 @@ const VideoCallingAdmin = () => {
 
         {/* Smaller Video Feed and Controls */}
         <div className="w-60 flex flex-col items-center bg-black rounded-lg overflow-hidden">
-          <h3 className="text-white text-center rounded-t-lg text-lg font-bold py-1 w-full bg-gradient-to-r from-[#964b00] to-[#db6e00]">
+          <h3 className="text-white text-center rounded-t-lg text-lg font-bold py-1 w-full bg-gradient-to-r from-[rgb(12,25,97)] to-[rgb(30,60,180)]">
             Your Feed
           </h3>
           <div className="w-full h-40 overflow-hidden shadow-md relative">
@@ -243,7 +243,7 @@ const VideoCallingAdmin = () => {
               className="w-full h-full object-cover rounded-b-lg"
             ></video>
             {!isCameraOn && (
-              <div className="absolute inset-0 bg-black flex items-center justify-center border border-[#964b00] rounded-b-lg">
+              <div className="absolute inset-0 bg-black flex items-center justify-center border border-[rgb(12,25,97)] rounded-b-lg">
                 <MdVideocamOff size={34} className="text-white" />
               </div>
             )}
@@ -253,7 +253,7 @@ const VideoCallingAdmin = () => {
             <button
               onClick={toggleMicrophone}
               className={`p-4 rounded-full text-white transition-colors duration-200 ${
-                isMicOn ? 'bg-[#964b00] hover:bg-[#6b3500]' : 'bg-red-600 hover:bg-red-700'
+                isMicOn ? 'bg-[rgb(12,25,97)] hover:bg-[rgb(8,16,60)]' : 'bg-red-600 hover:bg-red-700'
               }`}
               title={isMicOn ? 'Turn off microphone' : 'Turn on microphone'}
             >
@@ -263,7 +263,7 @@ const VideoCallingAdmin = () => {
             <button
               onClick={toggleCamera}
               className={`p-4 rounded-full text-white transition-colors duration-200 ${
-                isCameraOn ? 'bg-[#964b00] hover:bg-[#6b3500]' : 'bg-red-600 hover:bg-red-700'
+                isCameraOn ? 'bg-[rgb(12,25,97)] hover:bg-[rgb(8,16,60)]' : 'bg-red-600 hover:bg-red-700'
               }`}
               title={isCameraOn ? 'Turn off camera' : 'Turn on camera'}
             >

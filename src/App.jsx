@@ -4,6 +4,7 @@ import VideoCalling from "./videocalling/VideoCalling"
 import AdminSigninPage from './AdminSign/AdminSigninPage';
 import AdminSignupPage from './AdminSign/AdminSignupPage';
 import AdminDashboardPage from './AdminDashboard/AdminDashboardPage';
+import VideoCallingAdmin from './VideoCallingAdmin/VideoCallingAdmin';
 
 
 function App() {
@@ -16,8 +17,8 @@ function App() {
         <Route path="/signin" element={<AdminSigninPage />} />
         <Route path ="/signup" element={<AdminSignupPage />} />
         <Route path="/AdminDashboardPage" element={<AdminDashboardPage />} />
-        {/*  <Route path="/video-calling-admin/:roomID" element={<VideoCallingAdmin />} />
-        <Route path="/FileUpload" element = {<FileUpload />} /> */}
+        <Route path="/video-calling-admin/:roomID" element={<VideoCallingAdmin />} />
+        {/*  <Route path="/FileUpload" element = {<FileUpload />} /> */}
       </Routes>
     </Router>
   )

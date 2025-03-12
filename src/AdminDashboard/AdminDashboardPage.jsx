@@ -486,14 +486,14 @@ const AdminDashboardPage = () => {
       className="bg-black h-screen flex flex-col bg-gradient-to-t from-gray-900 to-black backdrop-blur-md"
       style={{
         background: `
-          radial-gradient(circle at bottom right, rgba(80, 54, 41, 1) 20%, rgba(0, 0, 0, 1) 70%),
+          radial-gradient(circle at bottom right, rgb(12,25,97) 20%, rgba(0, 0, 0, 1) 70%),
           radial-gradient(circle at top right, rgba(150, 75, 0, 1) 10%, rgba(0, 0, 0, 1) 80%`
       }}
     >
       {isConnecting && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 border-4 border-t-[#964b00] border-r-[#964b00] border-b-[#964b00]/30 border-l-[#964b00]/30 rounded-full animate-spin mx-auto"></div>
+            <div className="w-16 h-16 border-4 border-t-[rgb(12,25,97)] border-r-[rgb(12,25,97)] border-b-[rgb(12,25,97)]/30 border-l-[rgb(12,25,97)]/30 rounded-full animate-spin mx-auto"></div>
             <p className="text-white text-xl font-medium">Connecting call...</p>
           </div>
         </div>
@@ -501,7 +501,7 @@ const AdminDashboardPage = () => {
       <nav className="bg-gradient-to-t from-[rgb(12,25,97)] to-[rgb(12,25,97)]/5 backdrop-blur-md border border-white/20 shadow-lg">
         <div className="container flex items-center justify-between px-6 py-3 mx-auto">
           <div className="h-12 flex items-center">
-            <img className="h-6 filter invert brightness-0" src={img} alt="Purview Logo" />
+            <img className="h-12 filter invert brightness-0" src={img} alt="Purview Logo" />
           </div>
           <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-white">
             Assistant Dashboard
@@ -520,7 +520,7 @@ const AdminDashboardPage = () => {
         <div className="absolute top-16 right-6 bg-black rounded-lg shadow-lg p-4 w-80 z-50">
           <p className="text-white font-medium mb-4 break-words">Email: {userEmail}</p>
           <button
-            className="w-full px-4 py-2 text-white bg-[#503629] rounded-lg hover:bg-[#964b00]"
+            className="w-full px-4 py-2 text-white bg-[rgb(12,25,97)] rounded-lg hover:bg-[rgb(12,25,97)]"
             onClick={() => setIsSignOutDialogOpen(true)}
           >
             Sign Out
@@ -535,7 +535,7 @@ const AdminDashboardPage = () => {
             </h2>
             <div className="flex justify-between">
               <button
-                className="px-6 py-2 text-white bg-[#503629] rounded-lg hover:bg-[#964b00]"
+                className="px-6 py-2 text-white bg-[rgb(12,25,97)] rounded-lg hover:bg-[rgb(12,25,97)]"
                 onClick={() => setIsSignOutDialogOpen(false)}
               >
                 Cancel
@@ -560,7 +560,7 @@ const AdminDashboardPage = () => {
         <div className="w-[500px] space-y-4">
           {callData.map((call) => (
             <div key={call.roomID} className="relative">
-              <div className="bg-gradient-to-r from-[#503629] to-[#964b00] rounded-lg p-6 shadow-lg border border-white/20 backdrop-blur-md">
+              <div className="bg-gradient-to-r from-[rgb(12,25,97)] to-[rgb(12,25,97)] rounded-lg p-6 shadow-lg border border-white/20 backdrop-blur-md">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
@@ -598,7 +598,7 @@ const AdminDashboardPage = () => {
                 
                 {/* Forward Menu */}
                 {showForwardMenu[call.roomID] && (
-                  <div className="absolute right-0 mt-4 w-64 bg-[#503629] rounded-lg shadow-lg border border-white/20 z-20">
+                  <div className="absolute right-0 mt-4 w-64 bg-[rgb(12,25,97)] rounded-lg shadow-lg border border-white/20 z-20">
                     <div className="p-3 border-b border-white/10">
                       <div className="flex items-center space-x-2">
                         <Users className="w-4 h-4 text-white/70" />
@@ -627,11 +627,11 @@ const AdminDashboardPage = () => {
       {!notificationPermission && (
         <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 z-50">
           <div className="flex items-center space-x-2">
-            <Bell className="w-6 h-6 text-[#964b00]" />
+            <Bell className="w-6 h-6 text-[rgb(12,25,97)]" />
             <p className="text-black">Enable notifications to receive call alerts</p>
           </div>
           <button
-            className="mt-2 w-full px-4 py-2 text-white bg-[#503629] rounded-lg hover:bg-[#964b00]"
+            className="mt-2 w-full px-4 py-2 text-white bg-[rgb(12,25,97)] rounded-lg hover:bg-[rgb(12,25,97)]"
             onClick={requestNotificationPermission}
           >
             Enable Notifications

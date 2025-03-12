@@ -449,7 +449,7 @@ useEffect(() => {
         <div className="container flex items-center justify-between px-6 py-3 mx-auto">
         <div className="h-12 flex items-center">
             <img
-            className="h-6 top-2 filter invert brightness-0"
+            className="h-12 top-2 filter invert brightness-0"
             src={img}
             alt="Purview Logo"
             />

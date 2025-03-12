@@ -101,11 +101,48 @@ const ChatInterface = ({ sessionId }) => {
           <h3 className="text-lg font-semibold">Chat with MAYA</h3>
         </div>
 
-        {/* Chat Messages */}
+        {/* Chat Messages with Custom Scrollbar */}
         <div
           ref={chatContainerRef}
-          className="h-96 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-[rgb(12,25,97)] scrollbar-track-transparent"
+          className="h-96 overflow-y-auto p-4 space-y-4 custom-scrollbar"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgb(12,25,97) rgba(0,0,0,0.3)',
+          }}
         >
+          {/* Custom Scrollbar Track and Thumb (visible in Firefox) */}
+          <style jsx>{`
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 8px;
+              background-color: rgba(0,0,0,0.3);
+              border-radius: 4px;
+            }
+            
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: linear-gradient(to bottom, rgb(12,25,97), rgb(8,16,60));
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              box-shadow: 0 0 6px rgba(12,25,150,0.5);
+            }
+            
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: linear-gradient(to bottom, rgb(18,37,145), rgb(12,25,97));
+              box-shadow: 0 0 10px rgba(12,25,150,0.8);
+            }
+            
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background-color: rgba(0,0,0,0.3);
+              border-radius: 4px;
+              box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            }
+            
+            /* For Firefox */
+            .custom-scrollbar {
+              scrollbar-width: thin;
+              scrollbar-color: rgb(12,25,97) rgba(0,0,0,0.3);
+            }
+          `}</style>
+
           {chatHistory.map((msg, index) => (
             <div
               key={index}

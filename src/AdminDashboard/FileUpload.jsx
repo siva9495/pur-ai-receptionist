@@ -3,15 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { getAuth, signOut } from "firebase/auth";
 import { ref, get, onValue, remove } from "firebase/database";
 import { db } from "../Firebase/Firebase";
-import { Upload } from "lucide-react";
+import { Upload, Trash2 } from "lucide-react";
 import img from "../Images/purviewlogo.png";
 
 const FileUpload = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
+  const [isClearConfirmDialogOpen, setIsClearConfirmDialogOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userInitials, setUserInitials] = useState("");
   const [dragActive, setDragActive] = useState(false);
@@ -72,6 +74,29 @@ const FileUpload = () => {
       alert("An error occurred while uploading files.");
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleClearAll = async () => {
+    setIsClearing(true);
+    try {
+      const response = await fetch(`${BASE_URL}/clear_all_data`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`All files cleared successfully! Deleted ${result.deleted_count} documents.`);
+      } else {
+        const error = await response.json();
+        alert(`Failed to clear files: ${error.detail}`);
+      }
+    } catch (error) {
+      console.error("Clear all error:", error);
+      alert("An error occurred while clearing files.");
+    } finally {
+      setIsClearing(false);
+      setIsClearConfirmDialogOpen(false);
     }
   };
 
@@ -186,6 +211,35 @@ const FileUpload = () => {
         </div>
       )}
 
+      {/* Clear All Confirmation Dialog */}
+      {isClearConfirmDialogOpen && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-96 text-center">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Warning: Delete All Uploaded Files
+            </h2>
+            <p className="text-gray-700 mb-6">
+              This action will permanently delete all previously uploaded files from the database. This cannot be undone.
+            </p>
+            <div className="flex justify-between">
+              <button
+                className="px-6 py-2 text-white bg-[rgb(12,25,97)] rounded-lg hover:bg-[rgb(12,25,97)]"
+                onClick={() => setIsClearConfirmDialogOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-6 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600"
+                onClick={handleClearAll}
+                disabled={isClearing}
+              >
+                {isClearing ? "Deleting..." : "Delete All"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* File Upload Section */}
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <div
@@ -237,26 +291,39 @@ const FileUpload = () => {
           </div>
         )}
 
-        {/* Upload Button */}
-        <button
-          className={`mt-6 px-8 py-3 bg-[rgb(12,25,97)] text-white rounded-lg transition-all transform hover:bg-[rgb(8,16,60)] disabled:opacity-50 ${
-            isUploading ? 'cursor-not-allowed' : 'hover:scale-105'
-          }`}
-          onClick={handleUpload}
-          disabled={isUploading}
-        >
-          {isUploading ? (
-            <span className="flex items-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Uploading...
-            </span>
-          ) : (
-            "Upload Files"
-          )}
-        </button>
+        {/* Action Buttons */}
+        <div className="mt-6 flex space-x-4">
+          <button
+            className={`px-8 py-3 bg-[rgb(12,25,97)] text-white rounded-lg transition-all transform hover:bg-[rgb(8,16,60)] disabled:opacity-50 ${
+              isUploading ? 'cursor-not-allowed' : 'hover:scale-105'
+            }`}
+            onClick={handleUpload}
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Uploading...
+              </span>
+            ) : (
+              "Upload Files"
+            )}
+          </button>
+          
+          <button
+            className={`px-8 py-3 bg-red-600 text-white rounded-lg transition-all transform hover:bg-red-700 disabled:opacity-50 ${
+              isClearing ? 'cursor-not-allowed' : 'hover:scale-105'
+            } flex items-center`}
+            onClick={() => setIsClearConfirmDialogOpen(true)}
+            disabled={isClearing}
+          >
+            <Trash2 className="w-5 h-5 mr-2" />
+            {isClearing ? "Clearing..." : "Clear All Files"}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -536,6 +536,35 @@ const InteractionActivity = () => {
         </button> 
       )}
 
+      {/* Video Call Button */}
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-10">
+        <button
+          id="videoCallButton"
+          onClick={(e) => {
+            e.stopPropagation(); // This prevents the click from bubbling up to the parent div
+            handleVideoCall();
+          }}
+          className="bg-gradient-to-r from-[#ffffff] to-[#ffffff] hover:from-[#ffffff] hover:to-[#f2f2f2]
+             text-[rgb(12,25,97)] px-8 py-3 rounded-full shadow-lg transform transition-all duration-200
+             hover:scale-105 font-semibold tracking-wide flex items-center gap-2"
+        >
+          <span className="text-lg">Video Call</span>
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+            />
+          </svg>
+        </button>
+      </div>
+
       {/* Animations */}
       {state.isAnalyzing ? <AnalyzingAnimation /> : <SphereAnimation />}
 

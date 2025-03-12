@@ -68,7 +68,7 @@ const ChatInterface = ({ sessionId }) => {
         <button
           onClick={toggleChat}
           type="button"
-          className={`relative w-14 h-14 rounded-full bg-gradient-radial from-[rgb(12,25,97)] to-black text-white shadow-lg 
+          className={`relative w-14 h-14 rounded-full bg-[rgb(12,25,97)] text-white shadow-lg 
             transition-all duration-300 hover:scale-110 ${isOpen ? 'rotate-90' : ''}
             before:absolute before:inset-0 before:rounded-full before:animate-pulse
             before:bg-[rgb(12,25,97)] before:opacity-50 before:scale-150

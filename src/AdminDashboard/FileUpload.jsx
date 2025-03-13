@@ -5,6 +5,7 @@ import { ref, get, onValue, remove } from "firebase/database";
 import { db } from "../Firebase/Firebase";
 import { Upload, Trash2 } from "lucide-react";
 import img from "../Images/purviewlogo.png";
+import BASE_URL from '../config';
 
 const FileUpload = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);

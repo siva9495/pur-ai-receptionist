@@ -7,6 +7,7 @@ const ChatInterface = ({ sessionId }) => {
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   
   const chatContainerRef = useRef(null);
 
@@ -18,6 +19,7 @@ const ChatInterface = ({ sessionId }) => {
   const handleContainerClick = (e) => {
     e.stopPropagation();
   };
+  
   const showLoadingDialog = () => setIsLoading(true);
   const hideLoadingDialog = () => setIsLoading(false);
 
@@ -28,6 +30,9 @@ const ChatInterface = ({ sessionId }) => {
     const newMessage = { type: 'user', content: message };
     setChatHistory((prev) => [...prev, newMessage]);
     setMessage('');
+    
+    // Show typing indicator
+    setIsTyping(true);
 
     try {
       const formData = new FormData();
@@ -42,6 +47,9 @@ const ChatInterface = ({ sessionId }) => {
       const data = await response.json();
       const numberRegex = /\b\d{8}\b/;
       const answer = data.answer;
+      
+      // Hide typing indicator
+      setIsTyping(false);
 
       if (numberRegex.test(answer)) {
         const cleanedAnswer = answer.replace(numberRegex, '').trim();
@@ -52,6 +60,8 @@ const ChatInterface = ({ sessionId }) => {
       setChatHistory((prev) => [...prev, { type: 'bot', content: answer }]);
     } catch (error) {
       console.error('Error:', error);
+      // Hide typing indicator even on error
+      setIsTyping(false);
       setChatHistory((prev) => [...prev, { type: 'bot', content: 'Sorry, I encountered an error. Please try again.' }]);
     }
   };
@@ -60,7 +70,7 @@ const ChatInterface = ({ sessionId }) => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [chatHistory]);
+  }, [chatHistory, isTyping]);
 
   return (
     <div className="fixed bottom-4 right-4 z-50" onClick={handleContainerClick}>
@@ -141,13 +151,49 @@ const ChatInterface = ({ sessionId }) => {
               scrollbar-width: thin;
               scrollbar-color: rgb(12,25,97) rgba(0,0,0,0.3);
             }
+            
+            /* Typing animation */
+            .typing-dot {
+              display: inline-block;
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+              margin-right: 4px;
+              background: white;
+              animation: typing-dot 1.4s infinite ease-in-out both;
+            }
+            
+            .typing-dot:nth-child(1) {
+              animation-delay: -0.32s;
+            }
+            
+            .typing-dot:nth-child(2) {
+              animation-delay: -0.16s;
+            }
+            
+            @keyframes typing-dot {
+              0%, 80%, 100% { 
+                transform: scale(0);
+                opacity: 0.5;
+              }
+              40% { 
+                transform: scale(1);
+                opacity: 1;
+              }
+            }
           `}</style>
 
           {chatHistory.map((msg, index) => (
             <div
               key={index}
-              className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'} mb-4`}
             >
+              {/* Sender Label */}
+              <div className="text-xs text-gray-400 mb-1 px-2">
+                {msg.type === 'user' ? 'You' : 'MAYA'}
+              </div>
+              
+              {/* Message Bubble */}
               <div
                 className={`max-w-[80%] p-3 rounded-lg ${
                   msg.type === 'user'
@@ -159,6 +205,22 @@ const ChatInterface = ({ sessionId }) => {
               </div>
             </div>
           ))}
+          
+          {/* Typing Indicator */}
+          {isTyping && (
+            <div className="flex flex-col items-start mb-4">
+              <div className="text-xs text-gray-400 mb-1 px-2">
+                MAYA
+              </div>
+              <div className="bg-gradient-radial from-[rgba(12,25,97,0.7)] to-black text-white rounded-lg rounded-bl-none shadow-[0_0_10px_rgba(12,25,97,0.7)] p-4">
+                <div className="flex items-center">
+                  <span className="typing-dot"></span>
+                  <span className="typing-dot"></span>
+                  <span className="typing-dot"></span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Message Input */}
@@ -171,11 +233,15 @@ const ChatInterface = ({ sessionId }) => {
               placeholder="Type your message..."
               className="flex-1 p-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-white placeholder-gray-400 
                 focus:outline-none focus:ring-2 focus:ring-[rgb(12,25,97)] border border-[rgba(255,255,255,0.2)]"
+              disabled={isTyping}
             />
             <button
               type="submit"
-              className="p-2 bg-gradient-radial from-[rgb(12,25,97)] to-black text-white rounded-lg hover:bg-[rgb(12,25,150)] 
-                transition-colors shadow-[0_0_10px_rgba(12,25,97,0.5)]"
+              className={`p-2 bg-gradient-radial from-[rgb(12,25,97)] to-black text-white rounded-lg
+                transition-colors shadow-[0_0_10px_rgba(12,25,97,0.5)] ${
+                isTyping ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[rgb(12,25,150)]'
+              }`}
+              disabled={isTyping}
             >
               <Send size={20} />
             </button>

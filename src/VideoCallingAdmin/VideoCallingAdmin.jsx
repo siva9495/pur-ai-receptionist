@@ -58,7 +58,7 @@ const VideoCallingAdmin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   // Extract roomID and adminId from location.state.
-  const { roomID, adminId } = location.state || {};
+  const { roomID, adminId, isInvited} = location.state || {};
 
   // Refs
   const localVideoRef = useRef(null);
@@ -457,54 +457,76 @@ unsubscribe();
 }, [roomID, adminId]);
 
 // Join the room and start the call
-const joinRoom = (peer, roomID) => {
-if (!roomID) return;
-const roomRef = ref(db, `JPMCReceptionistAdmin/${adminId}/calls/${roomID}`);
-get(roomRef)
-.then((snapshot) => {
-  if (snapshot.exists()) {
-    const roomData = snapshot.val();
-    const remotePeerID = roomData.peerID;
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        setLocalStream(stream);
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
-        
-        // Call the user (customer)
-        const call = peer.call(remotePeerID, stream);
-        call.on('stream', (remoteStream) => {
-          setRemoteStream(remoteStream);
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
-          }
-        });
-        call.on('error', (err) => console.error('Call error:', err));
-        
-        // Store the call for later cleanup
-        callsRef.current[remotePeerID] = call;
-        
-        // Create a connection to the user for control messages
-        const conn = peer.connect(remotePeerID);
-        conn.on('open', () => {
-          console.log('Connected to user:', remotePeerID);
-        });
-        
-        // Store the connection for later cleanup
-        connectionsRef.current[remotePeerID] = conn;
-        
-        // Create or update our participant entry in the call room
-        createOrUpdateParticipant(peer.id);
-      })
-      .catch((err) => console.error('Error accessing media devices:', err));
-  } else {
-    console.error('No data found for room ID:', roomID);
+const joinRoom = async (peer, roomID) => {
+  if (!roomID) {
+    console.error("No room ID provided.");
+    return;
   }
-})
-.catch((err) => console.error('Error fetching room data:', err));
+
+  setLoading(true);
+
+  try {
+    let roomRef = ref(db, `JPMCReceptionistAdmin/${adminId}/calls/${roomID}`);
+    let snapshot = await get(roomRef);
+
+    if (!snapshot.exists()) {
+      // If no direct call found, check callRooms for conference call
+      console.log(`Room ${roomID} not found under JPMCReceptionistAdmin, checking callRooms...`);
+      roomRef = ref(db, `adminInvitations/${adminId}/${roomID}`);
+      snapshot = await get(roomRef);
+    }
+
+    if (!snapshot.exists()) {
+      console.error("Room does not exist in Firebase:", roomID);
+      return;
+    }
+
+    const roomData = snapshot.val();
+    const remotePeerID = roomData.peerID || roomData.hostPeerId; // Use correct peer ID
+
+    if (!remotePeerID) {
+      console.error("No valid Peer ID found for room:", roomID);
+      return;
+    }
+
+    // Request user media
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    setLocalStream(stream);
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    }
+
+    // Call the remote peer
+    const call = peer.call(remotePeerID, stream);
+    call.on("stream", (remoteStream) => {
+      setRemoteStream(remoteStream);
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      }
+    });
+    call.on("error", (err) => console.error("Call error:", err));
+
+    // Store call reference
+    callsRef.current[remotePeerID] = call;
+
+    // Create a connection for messaging
+    const conn = peer.connect(remotePeerID);
+    conn.on("open", () => {
+      console.log("Connected to peer:", remotePeerID);
+    });
+
+    // Store connection reference
+    connectionsRef.current[remotePeerID] = conn;
+
+    // Update participant status in Firebase
+    await createOrUpdateParticipant(peer.id, roomID);
+  } catch (error) {
+    console.error("Error joining room:", error);
+  } finally {
+    setLoading(false);
+  }
 };
+
 
 // Create or update the participant entry in the call room
 const createOrUpdateParticipant = async (peerId) => {

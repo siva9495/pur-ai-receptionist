@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, signOut, onAuthStateChanged  } from "firebase/auth";
 import { ref, set, get, onValue, remove, off, update, runTransaction } from "firebase/database";
 import { Loader2, Bell, PhoneCall, PhoneForwarded, PhoneOff, Users } from "lucide-react";
 import { db } from "../Firebase/Firebase";
@@ -23,6 +23,35 @@ const AdminDashboardPage = () => {
   const callListenerRef = useRef(null);
   const [showForwardMenu, setShowForwardMenu] = useState({});
   const [availableUsers, setAvailableUsers] = useState([]);
+  const [adminInvitations, setAdminInvitations] = useState([]);
+
+  useEffect(() => {
+    const auth = getAuth();
+    
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userIdRef.current = user.uid; // Store the authenticated user's UID
+        setUserEmail(user.email);
+        setUserInitials(user.email.slice(0, 2).toUpperCase());
+  
+        // Set user availability
+        const availableRef = ref(db, `available/${user.uid}`);
+        set(availableRef, { email: user.email, status: "available" })
+          .catch((error) => console.error("Error setting availability:", error));
+  
+        const adminRef = ref(db, `JPMCReceptionistAdmin/${user.uid}`);
+        set(adminRef, { email: user.email, status: "available" })
+          .catch((error) => console.error("Error adding admin:", error));
+        
+        console.log("User authenticated:", user.email);
+      } else {
+        console.log("No user is signed in.");
+        navigate("/signin");
+      }
+    });
+  
+    return () => unsubscribe(); // Cleanup on unmount
+  }, [navigate]);
 
   // Add new function to handle call forwarding
   const handleForward = async (roomID, targetUserId) => {
@@ -246,6 +275,158 @@ const AdminDashboardPage = () => {
       }
     } catch (error) {
       console.error("Error handling decline:", error);
+    }
+  };
+
+  // Add this function to handle accepting admin invitations
+  const handleAcceptInvitation = async (roomID) => {
+    setIsConnecting(true);
+  
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+  
+      if (!currentUser) {
+        console.error("No authenticated user found. Retrying...");
+        setIsConnecting(false);
+        return;
+      }
+  
+      const invitationRef = ref(db, `adminInvitations/${userIdRef.current}/${roomID}`);
+      const invitationSnapshot = await get(invitationRef);
+      
+      if (invitationSnapshot.exists()) {
+        const invitationData = invitationSnapshot.val();
+        
+        // Update invitation status
+        await update(invitationRef, { status: 'accepted' });
+  
+        // Add admin to call room participants
+        const participantRef = ref(db, `callRooms/${roomID}/participants/${userIdRef.current}`);
+        await update(participantRef, {
+          id: userIdRef.current,
+          name: currentUser.email ? currentUser.email.split('@')[0] : 'Admin',
+          role: 'admin',
+          status: 'joined',
+          joinTime: Date.now(),
+          isMuted: true,
+          hasVideo: true
+        });
+  
+        // Update admin availability
+        await update(ref(db, `JPMCReceptionistAdmin/${userIdRef.current}`), { status: "unavailable" });
+        await update(ref(db, `available/${userIdRef.current}`), { status: "unavailable" });
+  
+        // Navigate to video calling page
+        setTimeout(() => {
+          setIsConnecting(false);
+          navigate(`/video-calling-admin/${roomID}`, {
+            state: { roomID, adminId: userIdRef.current, isInvited: true }
+          });
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+      setIsConnecting(false);
+    }
+  };
+  
+
+  // Add this function to handle declining admin invitations
+  const handleDeclineInvitation = async (roomID) => {
+    try {
+      // Get the invitation details
+      const invitationRef = ref(db, `adminInvitations/${userIdRef.current}/${roomID}`);
+      const invitationSnapshot = await get(invitationRef);
+      
+      if (invitationSnapshot.exists()) {
+        // Update the invitation status
+        await update(invitationRef, {
+          status: 'declined'
+        });
+        
+        // Update the admin's status in the call room
+        const participantRef = ref(db, `callRooms/${roomID}/participants/${userIdRef.current}`);
+        await update(participantRef, {
+          status: 'declined',
+          declinedAt: Date.now()
+        });
+        
+        // Remove the invitation after updating status
+        setTimeout(() => remove(invitationRef), 1000);
+      }
+    } catch (error) {
+      console.error("Error declining invitation:", error);
+    }
+  };
+
+  // Add this effect to listen for admin invitations
+  useEffect(() => {
+    if (!userIdRef.current) return;
+    
+    const invitationsRef = ref(db, `adminInvitations/${userIdRef.current}`);
+    const listener = onValue(invitationsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        // Filter for pending invitations
+        const pendingInvitations = Object.entries(data)
+          .filter(([roomID, details]) => details.status === "pending")
+          .map(([roomID, details]) => ({
+            roomID,
+            invitedBy: details.invitedBy,
+            invitedAt: details.invitedAt,
+            hostPeerId: details.hostPeerId
+          }));
+        
+        setAdminInvitations(pendingInvitations);
+        
+        // Show notification for each new invitation if window is not focused
+        pendingInvitations.forEach((invitation) => {
+          showInvitationNotification(invitation.invitedBy, invitation.roomID);
+        });
+      } else {
+        setAdminInvitations([]);
+      }
+    });
+    
+    return () => {
+      off(invitationsRef, "value", listener);
+    };
+  }, []);
+
+  // Function to show notification for conference invitations
+  const showInvitationNotification = (inviterId, roomID) => {
+    if (!("Notification" in window)) return;
+    
+    if (Notification.permission === "granted" && !isWindowFocused) {
+      // Get inviter's name if available
+      const getInviterName = async () => {
+        try {
+          const inviterRef = ref(db, `JPMCReceptionistAdmin/${inviterId}`);
+          const snapshot = await get(inviterRef);
+          let inviterName = "An admin";
+          
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            inviterName = data.email ? data.email.split('@')[0] : "An admin";
+          }
+          
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.ready.then((registration) => {
+              registration.showNotification("Conference Call Invitation", {
+                body: `${inviterName} invited you to join a conference call`,
+                icon: "/path/to/notification-icon.png",
+                tag: `invitation-${roomID}`,
+                requireInteraction: true
+              });
+            });
+          }
+        } catch (error) {
+          console.error("Error showing invitation notification:", error);
+        }
+      };
+      
+      getInviterName();
     }
   };
 
@@ -559,6 +740,53 @@ const AdminDashboardPage = () => {
             Manage your calls and connect to your customers.
           </p>
         </div>
+        {/* Admin Invitations Section */}
+        {adminInvitations.length > 0 && (
+          <div className="text-white mt-8">
+            <h2 className="text-3xl font-bold">Conference Call Invitations</h2>
+            <p className="text-gray-400 mt-2">
+              You've been invited to join these conference calls.
+            </p>
+            <div className="w-[500px] space-y-4 mt-4">
+              {adminInvitations.map((invitation) => (
+                <div key={invitation.roomID} className="relative">
+                  <div className="bg-gradient-to-r from-[rgb(12,25,97)] to-[rgb(12,25,97)] rounded-lg p-6 shadow-lg border border-white/20 backdrop-blur-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+                          <Users className="w-6 h-6 text-white animate-pulse" />
+                        </div>
+                        <div>
+                          <h3 className="text-white text-lg font-semibold">Conference Call Invitation</h3>
+                          <p className="text-white/70 text-sm">From: {invitation.invitedBy}</p>
+                          <p className="text-white/50 text-xs">
+                            {new Date(invitation.invitedAt).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-4">
+                        <button
+                          onClick={() => handleAcceptInvitation(invitation.roomID)}
+                          className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center transition-all hover:bg-green-500/40"
+                        >
+                          <PhoneCall className="w-6 h-6 text-green-500" />
+                        </button>
+                        
+                        <button
+                          onClick={() => handleDeclineInvitation(invitation.roomID)}
+                          className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center transition-all hover:bg-red-500/40"
+                        >
+                          <PhoneOff className="w-6 h-6 text-red-500" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="w-[500px] space-y-4">
           {callData.map((call) => (
             <div key={call.roomID} className="relative">

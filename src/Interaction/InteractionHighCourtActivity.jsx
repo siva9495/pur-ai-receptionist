@@ -6,7 +6,7 @@ import AnalyzingAnimation from '../animations/AnalyzingAnimation';
 import PointerAnimation from '../animations/PointerAnimation';
 import ChatInterface from '../ChatbotComponent/ChatInterface';
 import TranscriptDisplay from '../AnimatedTranscriptDisplay/TranscriptDisplay';
-import img from '../Images/purviewlogo.png';
+import img from '../Images/bgrhighcourt.png';
 import { Maximize2, Mic, Video } from 'lucide-react';
 import BASE_URL from '../config';
 import axiosInstance from '../Api/axiosInstance';
@@ -141,7 +141,7 @@ const InteractionActivity = () => {
         // const url = 'https://cricket-smooth-polliwog.ngrok-free.app/clear_chat_history';
         const url = `${BASE_URL}/clear_chat_history`;
         const params = new URLSearchParams();
-        params.append("user_id", state.sessionId);
+        params.append("id", state.sessionId);
 
         fetch(url, {
           method: 'DELETE',
@@ -272,7 +272,7 @@ const InteractionActivity = () => {
             setTimeout(() => {
               if (!state.isListening && recognitionRef.current) {
                 if (!state.hasGreeted) {
-                  speakOut('Hello, This is Maya. How may I help you?', () => {
+                  speakOut('Hello, This is high court of telangana. How may I help you?', () => {
                     setState(prevState => ({ ...prevState, hasGreeted: true }));
                     startRecognition();
                   });
@@ -284,7 +284,7 @@ const InteractionActivity = () => {
           } else {
             if (!state.isListening && !state.isSpeaking && recognitionRef.current) {
               if (!state.hasGreeted) {
-                speakOut('Hello, This is Maya. How may I help you?', () => {
+                speakOut('Hello, This is high court of telangana. How may I help you?', () => {
                   setState(prevState => ({ ...prevState, hasGreeted: true }));
                   startRecognition();
                 });
@@ -337,11 +337,11 @@ const InteractionActivity = () => {
     try {
       const formData = new FormData();
       formData.append('question', userInput);
-      formData.append('user_id', state.sessionId);
+      formData.append('id', state.sessionId);
 
       // Fetch response from server using Axios instance
       const response = await axiosInstance.post(
-        '/ask_jpmc',
+        '/ask/',
         formData
       );
 
@@ -390,10 +390,10 @@ const InteractionActivity = () => {
       setState((prevState) => ({ ...prevState, isClearing: true }));
 
       const formData = new FormData();
-      formData.append("user_id", sessionId);
+      formData.append("id", sessionId);
 
       await axiosInstance.delete(
-        '/clear_chat_history',
+        '/clear_history/',
         { data: formData }
       );
 
@@ -423,63 +423,94 @@ const InteractionActivity = () => {
   };
 
   const speakOut = async (text, callback) => {
-    // Set isSpeaking to true when speech starts
+    // Set speaking state to true
     setState(prevState => ({ ...prevState, isSpeaking: true }));
     isSpeakingRef.current = true;
   
     const synth = window.speechSynthesis;
   
-    // Cancel any ongoing or pending speech
+    // Cancel any ongoing speech
     if (synth.speaking) {
       synth.cancel();
     }
   
-    // Check for special triggers (e.g., 8-digit numbers)
-    const numberRegex = /\b\d{8}\b/;
-    if (numberRegex.test(text)) {
-      console.log('8-digit number detected, skipping speech and navigating.');
-      showLoadingDialog();
-      setTimeout(() => {
-        hideLoadingDialog();
-        navigate('/video-calling');
-      }, 5000);
-      // Set isSpeaking to false since we're navigating away
-      setState(prevState => ({ ...prevState, isSpeaking: false }));
-      isSpeakingRef.current = false;
-      return;
-    }
+    // Function to split text into smaller chunks
+    const splitText = (text, maxLength = 200) => {
+      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+      const chunks = [];
   
-    // Wait for voices to load if not yet initialized
+      sentences.forEach(sentence => {
+        if (sentence.length <= maxLength) {
+          chunks.push(sentence);
+        } else {
+          const words = sentence.split(' ');
+          let currentChunk = '';
+          words.forEach(word => {
+            if ((currentChunk + word).length > maxLength) {
+              chunks.push(currentChunk.trim());
+              currentChunk = word + ' ';
+            } else {
+              currentChunk += word + ' ';
+            }
+          });
+          if (currentChunk) chunks.push(currentChunk.trim());
+        }
+      });
+  
+      return chunks;
+    };
+  
+    // Split the text into chunks
+    const chunks = splitText(text);
+  
+    // Wait for voices to load if not yet available
     if (synth.getVoices().length === 0) {
       await new Promise((resolve) => {
         synth.onvoiceschanged = resolve;
       });
     }
   
-    // Select Google US Female Voice
-    const voice = synth.getVoices().find(v => v.gender === "female");
-    
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.voice = voice || null;
-    msg.lang = "en-US"; // US English
+    // Get available voices
+    const voices = synth.getVoices();
   
-    msg.onend = () => {
-      // Set isSpeaking to false when speech ends
-      setState(prevState => ({ ...prevState, isSpeaking: false }));
-      isSpeakingRef.current = false;
+    // Prefer female voices
+    const preferredFemaleVoices = [
+      'Google UK English Female',
+      'Google US English Female',
+      'Microsoft Zira Desktop - English (United States)',
+      'Microsoft Hazel Desktop - English (Great Britain)',
+    ];
   
-      if (callback) {
-        callback();
+    let selectedVoice = preferredFemaleVoices
+      .map(name => voices.find(v => v.name === name))
+      .find(v => v !== undefined) || voices.find(v => v.lang === 'en-US') || voices[0];
+  
+    // Function to speak chunks sequentially
+    const speakNext = (index) => {
+      if (index >= chunks.length) {
+        setState(prevState => ({ ...prevState, isSpeaking: false }));
+        isSpeakingRef.current = false;
+        if (callback) callback();
+        return;
       }
+  
+      const msg = new SpeechSynthesisUtterance(chunks[index]);
+      if (selectedVoice) {
+        msg.voice = selectedVoice;
+        msg.lang = selectedVoice.lang;
+      } else {
+        msg.lang = 'en-US';
+      }
+  
+      msg.onend = () => {
+        speakNext(index + 1);
+      };
+  
+      synth.speak(msg);
     };
   
-    msg.onerror = () => {
-      // Handle errors
-      setState(prevState => ({ ...prevState, isSpeaking: false }));
-      isSpeakingRef.current = false;
-    };
-  
-    synth.speak(msg);
+    // Start speaking the first chunk
+    speakNext(0);
   };
 
 
@@ -528,7 +559,7 @@ const InteractionActivity = () => {
 
       {/* Welcome Message */}
       <h1 className="absolute top-10 left-1/2 -translate-x-1/2 text-white text-xl md:text-3xl font-bold m-0 z-20 text-center px-4 w-full">
-        Welcome To Purview Services
+        Welcome To High Court Of Telangana
       </h1>
 
       {/* Status Message */}
@@ -551,23 +582,6 @@ const InteractionActivity = () => {
              <PointerAnimation />
          </div>
       )}
-
-      {/* Video Call Button */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10">
-        <button
-          id="videoCallButton"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleVideoCall();
-          }}
-          className="bg-gradient-to-r from-[#ffffff] to-[#f2f2f2] hover:from-[#f2f2f2] hover:to-[#e6e6e6]
-             text-[rgb(12,25,97)] px-4 md:px-8 py-2 md:py-3 rounded-full shadow-lg transform transition-all duration-200
-             hover:scale-105 font-semibold tracking-wide flex items-center gap-2 text-sm md:text-base"
-        >
-          <Video className="w-4 h-4 md:w-5 md:h-5" />
-          <span>Video Call</span>
-        </button>
-      </div>
 
       {/* Animations */}
       {state.isAnalyzing ? <AnalyzingAnimation /> : <SphereAnimation />}

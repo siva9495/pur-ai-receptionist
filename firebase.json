@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "highcourtaibot",
     "public": "dist",
     "ignore": [
       "firebase.json",

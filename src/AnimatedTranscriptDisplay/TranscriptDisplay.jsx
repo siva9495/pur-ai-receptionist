@@ -109,7 +109,7 @@ const TranscriptDisplay = ({ transcript, response, isSpeaking }) => {
                 className="max-w-[90%] bg-[rgb(12,25,97)] text-white p-4 rounded-2xl rounded-br-none
                  shadow-[0_0_15px_rgb(12,25,97)] backdrop-blur-sm ml-auto"
               >
-                <div className="text-sm text-blue-200 mb-1">Maya</div>
+                <div className="text-sm text-blue-200 mb-1">AI-Bot</div>
                 <div 
                   ref={responseRef}
                   className="text-lg max-h-64 overflow-y-auto pr-2"

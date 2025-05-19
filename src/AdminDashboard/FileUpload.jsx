@@ -58,7 +58,7 @@ const FileUpload = () => {
     });
 
     try {
-      const response = await fetch(`${BASE_URL}/upload`, {
+      const response = await fetch(`${BASE_URL}/upload/`, {
         method: 'POST',
         body: formData,
       });

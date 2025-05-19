@@ -37,9 +37,9 @@ const ChatInterface = ({ sessionId }) => {
     try {
       const formData = new FormData();
       formData.append('question', message);
-      formData.append('user_id', sessionId);
+      formData.append('id', sessionId);
 
-      const response = await fetch(`${BASE_URL}/ask_jpmc`, {
+      const response = await fetch(`${BASE_URL}/ask/`, {
         method: 'POST',
         body: formData,
       });      
@@ -108,7 +108,7 @@ const ChatInterface = ({ sessionId }) => {
       >
         {/* Chat Header */}
         <div className="bg-gradient-radial from-[rgb(12,25,97)] to-black text-white p-4 rounded-t-lg border-b border-[rgba(255,255,255,0.2)]">
-          <h3 className="text-lg font-semibold">Chat with MAYA</h3>
+          <h3 className="text-lg font-semibold">Chat with High Court AI-Bot</h3>
         </div>
 
         {/* Chat Messages with Custom Scrollbar */}
@@ -190,7 +190,7 @@ const ChatInterface = ({ sessionId }) => {
             >
               {/* Sender Label */}
               <div className="text-xs text-gray-400 mb-1 px-2">
-                {msg.type === 'user' ? 'You' : 'MAYA'}
+                {msg.type === 'user' ? 'You' : 'AI-Bot'}
               </div>
               
               {/* Message Bubble */}
@@ -210,7 +210,7 @@ const ChatInterface = ({ sessionId }) => {
           {isTyping && (
             <div className="flex flex-col items-start mb-4">
               <div className="text-xs text-gray-400 mb-1 px-2">
-                MAYA
+                AI-Bot
               </div>
               <div className="bg-gradient-radial from-[rgba(12,25,97,0.7)] to-black text-white rounded-lg rounded-bl-none shadow-[0_0_10px_rgba(12,25,97,0.7)] p-4">
                 <div className="flex items-center">

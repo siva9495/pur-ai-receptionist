@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import InteractionActivity from "./Interaction/InteractionActivity";
+import InteractionHighCourtActivity from './Interaction/InteractionHighCourtActivity'
 import VideoCalling from "./videocalling/VideoCalling";
 import AdminSigninPage from './AdminSign/AdminSigninPage';
 import AdminSignupPage from './AdminSign/AdminSignupPage';
@@ -35,7 +36,8 @@ function App() {
       /> */}
       <Router>
         <Routes>
-          <Route path="/" element={<InteractionActivity />} />
+          {/* <Route path="/" element={<InteractionActivity />} /> */}
+          <Route path="/" element={<InteractionHighCourtActivity />} />
           <Route path="/video-calling" element={<VideoCalling />} />
           <Route path="/signin" element={<AdminSigninPage />} />
           <Route path="/signup" element={<AdminSignupPage />} />

@@ -4,7 +4,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { ref, set, get, onValue, remove, off, update, runTransaction } from "firebase/database";
 import { Loader2, Bell, PhoneCall, PhoneForwarded, PhoneOff, Users } from "lucide-react";
 import { db } from "../Firebase/Firebase";
-import img from "../Images/purviewlogo.png";
+import img from "../Images/sbifulllogo.png";
 
 const AdminDashboardPage = () => {
   // State declarations
@@ -504,7 +504,7 @@ const handleAccept = async (roomID) => {
       <nav className="bg-gradient-to-t from-[rgb(12,25,97)] to-[rgb(12,25,97)]/5 backdrop-blur-md border border-white/20 shadow-lg">
         <div className="container flex items-center justify-between px-6 py-3 mx-auto">
           <div className="h-12 flex items-center">
-            <img className="h-12 filter invert brightness-0" src={img} alt="Purview Logo" />
+            <img className="h-7 filter invert brightness-0" src={img} alt="Purview Logo" />
           </div>
           <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-white">
             Assistant Dashboard

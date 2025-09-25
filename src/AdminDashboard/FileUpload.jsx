@@ -4,7 +4,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { ref, get, onValue, remove } from "firebase/database";
 import { db } from "../Firebase/Firebase";
 import { Upload, Trash2 } from "lucide-react";
-import img from "../Images/purviewlogo.png";
+import img from "../Images/sbifulllogo.png";
 import BASE_URL from '../config';
 
 const FileUpload = () => {
@@ -152,7 +152,7 @@ const FileUpload = () => {
       <nav className="bg-gradient-to-t from-[rgb(12,25,97)] to-[rgb(12,25,97)]/5 backdrop-blur-md border-b border-white/20 shadow-lg">
         <div className="container flex items-center justify-between px-6 py-3 mx-auto">
           <div className="flex items-center">
-            <img className="h-12 filter invert brightness-0" src={img} alt="JPMC Logo" />
+            <img className="h-7 filter invert brightness-0" src={img} alt="JPMC Logo" />
           </div>
 
           <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-white">

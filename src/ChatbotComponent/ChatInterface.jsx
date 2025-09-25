@@ -108,7 +108,7 @@ const ChatInterface = ({ sessionId }) => {
       >
         {/* Chat Header */}
         <div className="bg-gradient-radial from-[rgb(12,25,97)] to-black text-white p-4 rounded-t-lg border-b border-[rgba(255,255,255,0.2)]">
-          <h3 className="text-lg font-semibold">Chat with High Court AI-Bot</h3>
+          <h3 className="text-lg font-semibold">Chat with SBI AI-Bot</h3>
         </div>
 
         {/* Chat Messages with Custom Scrollbar */}

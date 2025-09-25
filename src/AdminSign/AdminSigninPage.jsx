@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 import { ref, set, get, child } from "firebase/database";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { app, db } from "../Firebase/Firebase";
-import img from '../Images/purviewlogo.png'
+import img from '../Images/sbifulllogo.png'
 
 const AdminSigninPage = () => {
   const [email, setEmail] = useState("");
@@ -64,7 +64,7 @@ const AdminSigninPage = () => {
           <div className="flex items-center justify-between relative">
             <div className="h-12 flex items-center">
               <img
-                className="h-10 filter invert brightness-0"
+                className="h-7 filter invert brightness-0"
                 src={img}
                 alt="Purview Logo"
               />

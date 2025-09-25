@@ -4,7 +4,7 @@ import { db } from '../Firebase/Firebase';
 import { ref, get, onValue, remove, update } from 'firebase/database';
 import './VideoCallingAdmin.css';
 import { MdCallEnd, MdChat, MdClose, MdMic, MdMicOff, MdVideocam, MdVideocamOff } from "react-icons/md";
-import img from '../Images/purviewlogo.png';
+import img from '../Images/sbifulllogo.png';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const VideoCallingAdmin = () => {

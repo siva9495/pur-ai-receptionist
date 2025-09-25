@@ -8,6 +8,7 @@ import AdminDashboardPage from './AdminDashboard/AdminDashboardPage';
 import VideoCallingAdmin from './VideoCallingAdmin/VideoCallingAdmin';
 import FileUpload from './AdminDashboard/FileUpload';
 import { Toaster } from 'react-hot-toast';  // Import Toaster component
+import InteractionSBI from './Interaction/InteractionSBI';
 
 function App() {
   return (
@@ -37,7 +38,8 @@ function App() {
       <Router>
         <Routes>
           {/* <Route path="/" element={<InteractionActivity />} /> */}
-          <Route path="/" element={<InteractionHighCourtActivity />} />
+          {/* <Route path="/" element={<InteractionHighCourtActivity />} /> */}
+          <Route path="/" element={<InteractionSBI />} />
           <Route path="/video-calling" element={<VideoCalling />} />
           <Route path="/signin" element={<AdminSigninPage />} />
           <Route path="/signup" element={<AdminSignupPage />} />
